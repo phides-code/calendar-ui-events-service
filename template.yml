@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  Calendar-uiEventsService:
+    Type: AWS::Serverless::Api
+    Description: "Serverless API for CRUD operations"
+    Properties:
+      Name: "calendar-ui-events-service"
+      StageName: Prod
+      Cors:
+        AllowMethods: "'OPTIONS, POST, GET, PUT, DELETE'"
+        AllowHeaders: "'Content-Type'"
+        AllowOrigin: "'http://localhost:3000'" # replace with frontend app URL
+
+  Calendar-uiEventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 10
+      Handler: bootstrap
+      Runtime: provided.al2023
+      MemorySize: 512
+      Policies:
+        - AWSLambdaExecute
+        - SecretsManagerReadWrite
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Calendar-uiEventsTable
+      Events:
+        EventsOptions:
+          Type: Api
+          Properties:
+            Path: /events
+            Method: OPTIONS
+            RestApiId: !Ref Calendar-uiEventsService
+        GetEvent:
+          Type: Api
+          Properties:
+            Path: /events/{id}
+            Method: GET
+            RestApiId: !Ref Calendar-uiEventsService
+        GetEvents:
+          Type: Api
+          Properties:
+            Path: /events
+            Method: GET
+            RestApiId: !Ref Calendar-uiEventsService
+        PutEvent:
+          Type: Api
+          Properties:
+            Path: /events
+            Method: POST
+            RestApiId: !Ref Calendar-uiEventsService
+        DeleteEvent:
+          Type: Api
+          Properties:
+            Path: /events/{id}
+            Method: DELETE
+            RestApiId: !Ref Calendar-uiEventsService
+        UpdateEvent:
+          Type: Api
+          Properties:
+            Path: /events/{id}
+            Method: PUT
+            RestApiId: !Ref Calendar-uiEventsService
+    Metadata:
+      BuildMethod: makefile
+
+  Calendar-uiEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Calendar-uiEvents
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
