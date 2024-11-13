@@ -1,14 +1,6 @@
-# go-dynamodb-service-template
+# calendar-ui-events-service
 
-A Go project template providing CRUD services for a DynamoDB table, using AWS Lambda and API Gateway, deployed with AWS SAM and GitHub Actions.
-
-### Customize
-
--   Find and replace `Calendar-ui` with the name of the app (upper and lowercase A)
--   Find and replace `Event`/`Events` with the table name (upper and lowercase B)
--   Find and replace `us-east-1` with the AWS region
--   Update fields in `database.go`
--   Update values in `constants.go`
+CRUD service lambda for calendar-ui
 
 ### Deploy manually
 

@@ -4,7 +4,7 @@ package main
 const OriginURL = "http://localhost:3000"
 
 // replace with table name
-const TableName = "Calendar-uiEvents"
+const TableName = "CalendaruiEvents"
 
 // replace with API path
 const ApiPath = "events"

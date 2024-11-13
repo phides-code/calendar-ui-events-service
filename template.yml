@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-  Calendar-uiEventsService:
+  CalendaruiEventsService:
     Type: AWS::Serverless::Api
     Description: "Serverless API for CRUD operations"
     Properties:
@@ -13,7 +13,7 @@ Resources:
         AllowHeaders: "'Content-Type'"
         AllowOrigin: "'http://localhost:3000'" # replace with frontend app URL
 
-  Calendar-uiEventsFunction:
+  CalendaruiEventsFunction:
     Type: AWS::Serverless::Function
     Properties:
       Timeout: 10
@@ -24,51 +24,51 @@ Resources:
         - AWSLambdaExecute
         - SecretsManagerReadWrite
         - DynamoDBCrudPolicy:
-            TableName: !Ref Calendar-uiEventsTable
+            TableName: !Ref CalendaruiEventsTable
       Events:
         EventsOptions:
           Type: Api
           Properties:
             Path: /events
             Method: OPTIONS
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
         GetEvent:
           Type: Api
           Properties:
             Path: /events/{id}
             Method: GET
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
         GetEvents:
           Type: Api
           Properties:
             Path: /events
             Method: GET
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
         PutEvent:
           Type: Api
           Properties:
             Path: /events
             Method: POST
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
         DeleteEvent:
           Type: Api
           Properties:
             Path: /events/{id}
             Method: DELETE
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
         UpdateEvent:
           Type: Api
           Properties:
             Path: /events/{id}
             Method: PUT
-            RestApiId: !Ref Calendar-uiEventsService
+            RestApiId: !Ref CalendaruiEventsService
     Metadata:
       BuildMethod: makefile
 
-  Calendar-uiEventsTable:
+  CalendaruiEventsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Calendar-uiEvents
+      TableName: CalendaruiEvents
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
