@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -18,19 +17,18 @@ import (
 
 type Entity struct {
 	Id               string `json:"id" dynamodbav:"id"`
-	CreatedOn        uint64 `json:"createdOn" dynamodbav:"createdOn"`
 	EventDescription string `json:"eventDescription" dynamodbav:"eventDescription"`
-	EventDate        uint64 `json:"eventDate" dynamodbav:"eventDate"`
+	EventDate        string `json:"eventDate" dynamodbav:"eventDate"`
 }
 
 type NewEntity struct {
 	EventDescription string `json:"eventDescription" validate:"required"`
-	EventDate        uint64 `json:"eventDate" dynamodbav:"eventDate"`
+	EventDate        string `json:"eventDate" dynamodbav:"eventDate"`
 }
 
 type UpdatedEntity struct {
 	EventDescription string `json:"eventDescription" validate:"required"`
-	EventDate        uint64 `json:"eventDate" dynamodbav:"eventDate"`
+	EventDate        string `json:"eventDate" dynamodbav:"eventDate"`
 }
 
 func getDbClient() (*dynamodb.Client, error) {
@@ -109,12 +107,49 @@ func listEntities(ctx context.Context) ([]Entity, error) {
 	return entities, nil
 }
 
-func insertEntity(ctx context.Context, newEntity NewEntity) (*Entity, error) {
-	createdOnValue := uint64(time.Now().UnixMilli()) // Create a uint64 with current epoch
+func listEntitiesByDate(ctx context.Context, date string) ([]Entity, error) {
+	entities := make([]Entity, 0)
+	var token map[string]types.AttributeValue
 
+	filterExpression := "contains(eventDate, :date)"
+
+	exprAttrValues := map[string]types.AttributeValue{
+		":date": &types.AttributeValueMemberS{Value: date},
+	}
+
+	for {
+		input := &dynamodb.ScanInput{
+			TableName:                 aws.String(TableName),
+			FilterExpression:          aws.String(filterExpression),
+			ExpressionAttributeValues: exprAttrValues,
+		}
+
+		result, err := db.Scan(ctx, input)
+		if err != nil {
+			log.Println("listEntitiesByDate() error running db.Scan")
+			return nil, err
+		}
+
+		var fetchedEntity []Entity
+		err = attributevalue.UnmarshalListOfMaps(result.Items, &fetchedEntity)
+		if err != nil {
+			log.Println("listEntitiesByDate() error running attributevalue.UnmarshalListOfMaps")
+			return nil, err
+		}
+
+		entities = append(entities, fetchedEntity...)
+		token = result.LastEvaluatedKey
+		if token == nil {
+			break
+		}
+	}
+
+	return entities, nil
+}
+
+func insertEntity(ctx context.Context, newEntity NewEntity) (*Entity, error) {
 	entity := Entity{
 		Id:               uuid.NewString(),
-		CreatedOn:        createdOnValue,
 		EventDescription: newEntity.EventDescription,
 		EventDate:        newEntity.EventDate,
 	}

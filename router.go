@@ -21,7 +21,7 @@ var validate *validator.Validate = validator.New()
 
 var headers = map[string]string{
 	"Access-Control-Allow-Origin":  OriginURL,
-	"Access-Control-Allow-Headers": "Content-Type",
+	"Access-Control-Allow-Headers": "Content-Type, x-api-key",
 }
 
 func router(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -84,11 +84,47 @@ func processOptions() (events.APIGatewayProxyResponse, error) {
 
 func processGet(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	id, idPresent := req.PathParameters["id"]
+
 	if idPresent {
 		return processGetEntityById(ctx, id)
-	} else {
-		return processGetAll(ctx)
 	}
+
+	date, datePresent := req.PathParameters["date"]
+
+	if datePresent {
+		if !validateDate(date) {
+			return clientError(http.StatusBadRequest)
+		}
+		return processGetEntitiesByDate(ctx, date)
+	}
+
+	return processGetAll(ctx)
+}
+
+func processGetEntitiesByDate(ctx context.Context, date string) (events.APIGatewayProxyResponse, error) {
+	log.Println("running processGetEntitiesByDate: " + date)
+
+	entities, err := listEntitiesByDate(ctx, date)
+	if err != nil {
+		return serverError(err)
+	}
+
+	response := ResponseStructure{
+		Data:         entities,
+		ErrorMessage: nil,
+	}
+
+	responseJson, err := json.Marshal(response)
+	if err != nil {
+		log.Println("processGetEntitiesByDate() error running json.Marshal")
+		return serverError(err)
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Body:       string(responseJson),
+		Headers:    headers,
+	}, nil
 }
 
 func processGetEntityById(ctx context.Context, id string) (events.APIGatewayProxyResponse, error) {
@@ -160,6 +196,10 @@ func processPost(ctx context.Context, req events.APIGatewayProxyRequest) (events
 	err = validate.Struct(&createdEntity)
 	if err != nil {
 		log.Printf("Invalid body: %v", err)
+		return clientError(http.StatusBadRequest)
+	}
+
+	if !validateDateTime(createdEntity.EventDate) {
 		return clientError(http.StatusBadRequest)
 	}
 

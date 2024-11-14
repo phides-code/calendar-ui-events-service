@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -54,4 +55,16 @@ func mergeHeaders(baseHeaders, additionalHeaders map[string]string) map[string]s
 		mergedHeaders[key] = value
 	}
 	return mergedHeaders
+}
+
+func validateDate(date string) bool {
+	layout := "2006-01-02"
+	_, err := time.Parse(layout, date)
+	return err == nil
+}
+
+func validateDateTime(dateTime string) bool {
+	layout := "2006-01-02T15:04:05.000Z"
+	_, err := time.Parse(layout, dateTime)
+	return err == nil
 }
