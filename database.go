@@ -107,46 +107,6 @@ func listEntities(ctx context.Context) ([]Entity, error) {
 	return entities, nil
 }
 
-func listEntitiesByDate(ctx context.Context, date string) ([]Entity, error) {
-	entities := make([]Entity, 0)
-	var token map[string]types.AttributeValue
-
-	filterExpression := "contains(eventDate, :date)"
-
-	exprAttrValues := map[string]types.AttributeValue{
-		":date": &types.AttributeValueMemberS{Value: date},
-	}
-
-	for {
-		input := &dynamodb.ScanInput{
-			TableName:                 aws.String(TableName),
-			FilterExpression:          aws.String(filterExpression),
-			ExpressionAttributeValues: exprAttrValues,
-		}
-
-		result, err := db.Scan(ctx, input)
-		if err != nil {
-			log.Println("listEntitiesByDate() error running db.Scan")
-			return nil, err
-		}
-
-		var fetchedEntity []Entity
-		err = attributevalue.UnmarshalListOfMaps(result.Items, &fetchedEntity)
-		if err != nil {
-			log.Println("listEntitiesByDate() error running attributevalue.UnmarshalListOfMaps")
-			return nil, err
-		}
-
-		entities = append(entities, fetchedEntity...)
-		token = result.LastEvaluatedKey
-		if token == nil {
-			break
-		}
-	}
-
-	return entities, nil
-}
-
 func insertEntity(ctx context.Context, newEntity NewEntity) (*Entity, error) {
 	entity := Entity{
 		Id:               uuid.NewString(),

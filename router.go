@@ -89,42 +89,7 @@ func processGet(ctx context.Context, req events.APIGatewayProxyRequest) (events.
 		return processGetEntityById(ctx, id)
 	}
 
-	date, datePresent := req.PathParameters["date"]
-
-	if datePresent {
-		if !validateDate(date) {
-			return clientError(http.StatusBadRequest)
-		}
-		return processGetEntitiesByDate(ctx, date)
-	}
-
 	return processGetAll(ctx)
-}
-
-func processGetEntitiesByDate(ctx context.Context, date string) (events.APIGatewayProxyResponse, error) {
-	log.Println("running processGetEntitiesByDate: " + date)
-
-	entities, err := listEntitiesByDate(ctx, date)
-	if err != nil {
-		return serverError(err)
-	}
-
-	response := ResponseStructure{
-		Data:         entities,
-		ErrorMessage: nil,
-	}
-
-	responseJson, err := json.Marshal(response)
-	if err != nil {
-		log.Println("processGetEntitiesByDate() error running json.Marshal")
-		return serverError(err)
-	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusOK,
-		Body:       string(responseJson),
-		Headers:    headers,
-	}, nil
 }
 
 func processGetEntityById(ctx context.Context, id string) (events.APIGatewayProxyResponse, error) {

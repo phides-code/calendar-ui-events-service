@@ -44,12 +44,6 @@ Resources:
             Path: /events
             Method: GET
             RestApiId: !Ref CalendaruiEventsService
-        GetEventsByDay:
-          Type: Api
-          Properties:
-            Path: /events/date/{date}
-            Method: GET
-            RestApiId: !Ref CalendaruiEventsService
         PutEvent:
           Type: Api
           Properties:
